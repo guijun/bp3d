@@ -4,20 +4,23 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gedex/bp3d"
+	"github.com/gedex/bp3d/bp3d"
 )
 
 func main() {
 	p := bp3d.NewPacker()
 
 	// Add bins.
-	p.AddBin(bp3d.NewBin("Small Bin", 10, 15, 20, 100))
+	p.AddBin(bp3d.NewBin("Small Bin", 15, 10, 10, 100))
+	// p.AddBin(bp3d.NewBin("Small Bin", 10, 15, 20, 100))
 	p.AddBin(bp3d.NewBin("Medium Bin", 100, 150, 200, 1000))
 
-	// Add items.
-	p.AddItem(bp3d.NewItem("Item 1", 2, 2, 1, 2))
-	p.AddItem(bp3d.NewItem("Item 2", 3, 3, 2, 3))
-
+	for i := 0; i < 500; i++ {
+		// Add items.
+		p.AddItem(bp3d.NewItem("Item 1", 15, 2, 1, 2))
+		p.AddItem(bp3d.NewItem("Item 2", 2, 2, 1, 2))
+		p.AddItem(bp3d.NewItem("Item 3", 3, 3, 2, 3))
+	}
 	// Pack items to bins.
 	if err := p.Pack(); err != nil {
 		log.Fatal(err)
@@ -37,7 +40,7 @@ func main() {
 func displayPacked(bins []*bp3d.Bin) {
 	for _, b := range bins {
 		fmt.Println(b)
-		fmt.Println(" packed items:")
+		fmt.Printf(" packed items: %v\n", len(b.Items))
 		for _, i := range b.Items {
 			fmt.Println("  ", i)
 		}

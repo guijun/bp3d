@@ -20,6 +20,8 @@ type Bin struct {
 type BinSlice []*Bin
 
 func (bs BinSlice) Len() int { return len(bs) }
+
+// 用于排序？
 func (bs BinSlice) Less(i, j int) bool {
 	return bs[i].GetVolume() < bs[j].GetVolume()
 }
@@ -257,6 +259,15 @@ func NewPacker() *Packer {
 		Bins:       make([]*Bin, 0),
 		Items:      make([]*Item, 0),
 		UnfitItems: make([]*Item, 0),
+	}
+}
+
+func (p *Packer) LoadReq(aReq *ReqPack) {
+	if len(aReq.Items) > 0 {
+		p.AddItem(aReq.Items...)
+	}
+	if len(aReq.Bins) > 0 {
+		p.AddBin(aReq.Bins...)
 	}
 }
 
