@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bufio"
 	"encoding/json"
 
 	"github.com/gedex/bp3d/bp3d"
@@ -22,6 +23,11 @@ func IfHttpApi(app *fiber.App) {
 		var req bp3d.ReqPack
 		if err := json.Unmarshal(c.Request().Body(), &req); err != nil {
 			session.Packer.Pack()
+
+			writer := bufio.NewWriterSize(nil, 1024)
+			if binOut, _ := json.Marshal(session.Packer); len(binOut) > 0 {
+				c.Response().WriteGzip(writer)
+			}
 		} else {
 			return err
 		}
