@@ -10,9 +10,15 @@ const (
 	LOCAL_USESSION = "us"
 )
 
+type Credit struct {
+	Name   string
+	Amount int
+}
+
 type USession struct {
-	Id     string
-	Packer *bp3d.Packer
+	Id      string
+	Packer  *bp3d.Packer
+	Credits map[string]*Credit
 }
 
 // for io.Closer

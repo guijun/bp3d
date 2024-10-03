@@ -1,9 +1,11 @@
 package bp3d
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sort"
+  "sync/atomic"
 )
 
 // Bin represents a container in which items will be put into.
@@ -249,8 +251,11 @@ func (i *Item) String() string {
 }
 
 type Packer struct {
-	Bins       []*Bin
-	Items      []*Item
+	//容器
+	Bins []*Bin
+	//物品
+	Items []*Item
+	//未放下的物品
 	UnfitItems []*Item // items that don't fit to any bin
 }
 
@@ -279,7 +284,21 @@ func (p *Packer) AddItem(items ...*Item) {
 	p.Items = append(p.Items, items...)
 }
 
-func (p *Packer) Pack() error {
+func (p *Packer) Pack(aCtx context.Context) error {
+  var atomicQuit atomic.Bool
+  defer func() {
+    atomicQuit.Store(true)
+  }()
+	go func() {
+      for !atomicQuit.Load() {
+        select {
+        case <-aCtx.Done():
+          atomicQuit.Store(true) 
+          break
+        }
+    }
+	}()
+
 	sort.Sort(BinSlice(p.Bins))
 	sort.Sort(ItemSlice(p.Items))
 
@@ -287,13 +306,16 @@ func (p *Packer) Pack() error {
 	// to be returned before iterating items.
 
 	for len(p.Items) > 0 {
+		if atomicQuit.Load() {
+			return E_TIMEOUT
+		}
 		bin := p.FindFittedBin(p.Items[0])
 		if bin == nil {
 			p.unfitItem()
 			continue
 		}
 
-		p.Items = p.packToBin(bin, p.Items)
+		p.Items = p.packToBin(aCtx, bin, p.Items)
 	}
 
 	return nil
@@ -309,11 +331,11 @@ func (p *Packer) unfitItem() {
 }
 
 // packToBin packs items to bin b. Returns unpacked items.
-func (p *Packer) packToBin(b *Bin, items []*Item) (unpacked []*Item) {
+func (p *Packer) packToBin(aCtx context.Context, b *Bin, items []*Item) (unpacked []*Item) {
 	if !b.PutItem(items[0], startPosition) {
 
 		if b2 := p.getBiggerBinThan(b); b2 != nil {
-			return p.packToBin(b2, items)
+			return p.packToBin(aCtx, b2, items)
 		}
 
 		return p.Items
@@ -347,7 +369,7 @@ func (p *Packer) packToBin(b *Bin, items []*Item) (unpacked []*Item) {
 
 		if !fitted {
 			for b2 := p.getBiggerBinThan(b); b2 != nil; b2 = p.getBiggerBinThan(b) {
-				left := p.packToBin(b2, append(b2.Items, i))
+				left := p.packToBin(aCtx, b2, append(b2.Items, i))
 				if len(left) == 0 {
 					b = b2
 					fitted = true

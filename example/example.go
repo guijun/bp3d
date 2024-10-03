@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-
+  "context"
 	"github.com/gedex/bp3d/bp3d"
 )
 
@@ -22,7 +22,7 @@ func main() {
 		p.AddItem(bp3d.NewItem("Item 3", 3, 3, 2, 3))
 	}
 	// Pack items to bins.
-	if err := p.Pack(); err != nil {
+	if err := p.Pack(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 
